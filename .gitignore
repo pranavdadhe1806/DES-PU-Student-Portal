@@ -3,6 +3,9 @@
 # Single repo: frontend/ and backend/ are subdirectories, not separate repos.
 # =============================================================================
 
+# ── Antigravity AI Context (local only) ──────────────────────────────────────
+CLAUDE/
+
 # ── Dependencies ──────────────────────────────────────────────────────────────
 node_modules/
 .pnp
