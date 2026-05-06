@@ -1,0 +1,75 @@
+# =============================================================================
+# DES Unified Platform — Root .gitignore
+# Single repo: frontend/ and backend/ are subdirectories, not separate repos.
+# =============================================================================
+
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Environment Files ─────────────────────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Keep .env.example files — they're safe to commit
+!.env.example
+!**/.env.example
+
+# ── Next.js (frontend/) ───────────────────────────────────────────────────────
+frontend/.next/
+frontend/out/
+
+# ── Build Outputs ─────────────────────────────────────────────────────────────
+frontend/build/
+frontend/dist/
+backend/dist/
+
+# ── Prisma Generated Client (backend/) ───────────────────────────────────────
+backend/node_modules/.prisma/
+backend/prisma/generated/
+
+# ── Cloudflare R2 / Upload Temp Files (backend/) ─────────────────────────────
+backend/uploads/
+backend/tmp/
+backend/temp/
+*.tmp
+
+# ── BullMQ / Redis Artifacts ──────────────────────────────────────────────────
+*.rdb
+dump.rdb
+appendonly.aof
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# ── OS Files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ── Editor / IDE ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*.suo
+*.user
+
+# ── TypeScript Build Info ─────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Vercel (frontend/) ───────────────────────────────────────────────────────
+.vercel
+
+# ── Package Manager (keep pnpm-lock.yaml, ignore others) ─────────────────────
+package-lock.json
+yarn.lock

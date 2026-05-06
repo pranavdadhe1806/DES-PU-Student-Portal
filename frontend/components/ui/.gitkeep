@@ -1,0 +1,6 @@
+// TODO: shadcn/ui base components will live here
+// Run: pnpm dlx shadcn@latest init
+// Then add individual components: pnpm dlx shadcn@latest add button card dialog etc.
+// This directory is managed by shadcn/ui CLI — do not manually edit generated files
+
+export {};

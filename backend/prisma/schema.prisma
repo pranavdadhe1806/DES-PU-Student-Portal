@@ -1,0 +1,36 @@
+// This is your Prisma schema file.
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// =============================================================================
+// DES Unified Platform — Prisma Schema
+// =============================================================================
+// Status: Scaffold only — no models yet.
+// Models will be added in Week 1 of the build sprint.
+// See PLAN.md for full DB design before adding models.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon uses connection pooling — use directUrl for migrations
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// =============================================================================
+// TODO: Add models here
+// Planned models:
+// - User (id, email, role, department, semester, rollNumber, createdAt)
+// - Department (id, name, code)
+// - Semester (id, number, departmentId)
+// - Subject (id, name, code, semesterId, facultyId)
+// - Post (id, content, authorId, subjectId, parentId, type, createdAt)
+// - Resource (id, name, url, subjectId, uploadedById, createdAt)
+// - Message (id, content, senderId, conversationId, createdAt)
+// - Conversation (id, type, participants)
+// - Notification (id, userId, type, data, read, createdAt)
+// - Project (id, title, description, leaderId, status, createdAt)
+// - Badge (id, userId, type, awardedAt)
+// =============================================================================
