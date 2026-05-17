@@ -1,36 +1,705 @@
-// This is your Prisma schema file.
-// Learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// =============================================================================
 // DES Unified Platform — Prisma Schema
-// =============================================================================
-// Status: Scaffold only — no models yet.
-// Models will be added in Week 1 of the build sprint.
-// See PLAN.md for full DB design before adding models.
+// Phase 0 ✅ : Identity, Academic Structure, Marksheet
+// Phase 1 ✅ : Google Classroom (Announcements, Assignments, Submissions, Resources, Forums)
+// Phase 2 ✅ : WhatsApp (Chat, Presence)
+// Phase 3 ✅ : Discord/Social (Notifications, Gamification)
+// Phase 4 ✅ : GitHub Projects (Marketplace)
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  // Neon uses connection pooling — use directUrl for migrations
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "postgresql"
 }
 
-// =============================================================================
-// TODO: Add models here
-// Planned models:
-// - User (id, email, role, department, semester, rollNumber, createdAt)
-// - Department (id, name, code)
-// - Semester (id, number, departmentId)
-// - Subject (id, name, code, semesterId, facultyId)
-// - Post (id, content, authorId, subjectId, parentId, type, createdAt)
-// - Resource (id, name, url, subjectId, uploadedById, createdAt)
-// - Message (id, content, senderId, conversationId, createdAt)
-// - Conversation (id, type, participants)
-// - Notification (id, userId, type, data, read, createdAt)
-// - Project (id, title, description, leaderId, status, createdAt)
-// - Badge (id, userId, type, awardedAt)
-// =============================================================================
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  STUDENT
+  FACULTY
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PostType {
+  DISCUSSION
+  QUESTION
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  LATE
+  GRADED
+}
+
+enum PresenceStatus {
+  ONLINE
+  OFFLINE
+  AWAY
+}
+
+enum ConversationType {
+  DIRECT
+  GROUP
+  SUBJECT_GROUP
+  PROJECT_GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  FILE
+  SYSTEM
+}
+
+enum NotificationType {
+  REPLY
+  UPVOTE
+  MENTION
+  CHAT_MESSAGE
+  ANNOUNCEMENT
+  ASSIGNMENT_POSTED
+  GRADE_RELEASED
+  RESOURCE_PROCESSED
+  BADGE_EARNED
+}
+
+enum BadgeType {
+  CONTRIBUTOR
+  TOP_HELPER
+  TOPPER_NOTES
+  PROJECT_LEADER
+  FIRST_POST
+  STREAK_7
+  STREAK_30
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum Grade {
+  O
+  A_PLUS
+  A
+  B_PLUS
+  B
+  C
+  D
+  F
+}
+
+// ============================================================
+// CORE IDENTITY
+// ============================================================
+
+model User {
+  user_id    String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  mobile_no  String?
+  bio        String?
+  avatar     String?
+  role            Role           @default(STUDENT)
+  presence_status PresenceStatus @default(OFFLINE)
+  xp_total        Int            @default(0)
+  is_banned       Boolean        @default(false)
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+
+  student       Student?
+  faculty       Faculty?
+  admin         Admin?
+  superAdmin    SuperAdmin?
+  notifications Notification[]
+  xpEvents      XpEvent[]
+  badges        Badge[]
+  projects      Project[]
+
+  @@index([email])
+  @@map("users")
+}
+
+// ============================================================
+// ACADEMIC STRUCTURE
+// ============================================================
+
+model School {
+  school_id   String   @id @default(uuid())
+  school_name String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  departments Department[]
+
+  @@map("schools")
+}
+
+model Department {
+  dept_id    String   @id @default(uuid())
+  dept_name  String
+  school_id  String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  school    School     @relation(fields: [school_id], references: [school_id])
+  divisions Division[]
+  students  Student[]
+  faculty   Faculty[]
+  subjects  Subject[]
+
+  @@index([school_id])
+  @@map("departments")
+}
+
+model Semester {
+  sem_id        String   @id @default(uuid())
+  sem_number    Int
+  academic_year String
+  is_current    Boolean  @default(false)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  divisions       Division[]
+  studentSubjects StudentSubject[]
+  facultySubjects FacultySubject[]
+  marksheets      Marksheet[]
+  announcements   Announcement[]
+  assignments     Assignment[]
+  resources       Resource[]
+
+  @@unique([sem_number, academic_year])
+  @@map("semesters")
+}
+
+model Division {
+  div_id     String   @id @default(uuid())
+  div_name   String
+  dept_id    String
+  sem_id     String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  department Department @relation(fields: [dept_id], references: [dept_id])
+  semester   Semester   @relation(fields: [sem_id], references: [sem_id])
+  students   Student[]
+
+  @@unique([div_name, dept_id, sem_id])
+  @@index([dept_id])
+  @@index([sem_id])
+  @@map("divisions")
+}
+
+model Subject {
+  sub_id          String   @id @default(uuid())
+  sub_code        String   @unique
+  sub_name        String
+  sub_credits     Int
+  sub_total_marks Int
+  dept_id         String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  department       Department        @relation(fields: [dept_id], references: [dept_id])
+  studentSubjects  StudentSubject[]
+  facultySubjects  FacultySubject[]
+  marksheetResults MarksheetResult[]
+  announcements    Announcement[]
+  assignments      Assignment[]
+  resources        Resource[]
+  posts            Post[]
+
+  @@index([dept_id])
+  @@map("subjects")
+}
+
+// ============================================================
+// ROLE PROFILES
+// ============================================================
+
+model Student {
+  student_id  String   @id @default(uuid())
+  user_id     String   @unique
+  dept_id     String
+  school_id   String
+  div_id      String
+  stu_prn     String   @unique
+  abc_id      String?  @unique
+  father_name String?
+  mother_name String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user            User             @relation(fields: [user_id], references: [user_id])
+  department      Department       @relation(fields: [dept_id], references: [dept_id])
+  division        Division         @relation(fields: [div_id], references: [div_id])
+  studentSubjects StudentSubject[]
+  marksheets      Marksheet[]
+  submissions     Submission[]
+
+  @@index([user_id])
+  @@index([dept_id])
+  @@index([div_id])
+  @@index([stu_prn])
+  @@map("students")
+}
+
+model Faculty {
+  faculty_id  String   @id @default(uuid())
+  user_id     String   @unique
+  school_id   String
+  dept_id     String
+  fac_prn     String   @unique
+  designation String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  user            User             @relation(fields: [user_id], references: [user_id])
+  department      Department       @relation(fields: [dept_id], references: [dept_id])
+  facultySubjects FacultySubject[]
+  announcements   Announcement[]
+  assignments     Assignment[]
+
+  @@index([user_id])
+  @@index([dept_id])
+  @@map("faculty")
+}
+
+model Admin {
+  admin_id   String   @id @default(uuid())
+  user_id    String   @unique
+  adm_prn    String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@map("admins")
+}
+
+model SuperAdmin {
+  sup_admin_id String   @id @default(uuid())
+  user_id      String   @unique
+  sup_adm_prn  String   @unique
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@map("super_admins")
+}
+
+// ============================================================
+// JUNCTION TABLES
+// ============================================================
+
+model StudentSubject {
+  id          String   @id @default(uuid())
+  student_id  String
+  sub_id      String
+  sem_id      String
+  enrolled_at DateTime @default(now())
+
+  student  Student  @relation(fields: [student_id], references: [student_id])
+  subject  Subject  @relation(fields: [sub_id], references: [sub_id])
+  semester Semester @relation(fields: [sem_id], references: [sem_id])
+
+  @@unique([student_id, sub_id, sem_id])
+  @@index([student_id])
+  @@index([sub_id])
+  @@map("student_subjects")
+}
+
+model FacultySubject {
+  id          String   @id @default(uuid())
+  faculty_id  String
+  sub_id      String
+  sem_id      String
+  assigned_at DateTime @default(now())
+
+  faculty  Faculty  @relation(fields: [faculty_id], references: [faculty_id])
+  subject  Subject  @relation(fields: [sub_id], references: [sub_id])
+  semester Semester @relation(fields: [sem_id], references: [sem_id])
+
+  @@unique([faculty_id, sub_id, sem_id])
+  @@index([faculty_id])
+  @@index([sub_id])
+  @@map("faculty_subjects")
+}
+
+// ============================================================
+// MARKSHEET
+// ============================================================
+
+model Marksheet {
+  marksheet_id    String   @id @default(uuid())
+  student_id      String
+  sem_id          String
+  exam_month_year String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  student  Student           @relation(fields: [student_id], references: [student_id])
+  semester Semester          @relation(fields: [sem_id], references: [sem_id])
+  results  MarksheetResult[]
+
+  @@unique([student_id, sem_id])
+  @@index([student_id])
+  @@map("marksheets")
+}
+
+model MarksheetResult {
+  result_id    String @id @default(uuid())
+  marksheet_id String
+  sub_id       String
+
+  ca_out_of      Int
+  ca_obtained    Float
+
+  ese_out_of     Int
+  ese_obtained   Float
+
+  pr_or_out_of   Int   @default(0)
+  pr_or_obtained Float @default(0)
+
+  total_marks   Float
+  awarded_grade Grade
+  grade_point   Float
+  course_credit Int
+  credit_point  Float
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  marksheet Marksheet @relation(fields: [marksheet_id], references: [marksheet_id])
+  subject   Subject   @relation(fields: [sub_id], references: [sub_id])
+
+  @@unique([marksheet_id, sub_id])
+  @@index([marksheet_id])
+  @@index([sub_id])
+  @@map("marksheet_results")
+}
+
+// ============================================================
+// PHASE 1 — GOOGLE CLASSROOM
+// ============================================================
+
+model Announcement {
+  ann_id     String   @id @default(uuid())
+  faculty_id String
+  sub_id     String
+  sem_id     String
+  title      String
+  content    String
+  is_pinned  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  faculty  Faculty  @relation(fields: [faculty_id], references: [faculty_id])
+  subject  Subject  @relation(fields: [sub_id], references: [sub_id])
+  semester Semester @relation(fields: [sem_id], references: [sem_id])
+
+  @@index([sub_id, sem_id])
+  @@index([faculty_id])
+  @@map("announcements")
+}
+
+model Assignment {
+  assign_id         String   @id @default(uuid())
+  faculty_id        String
+  sub_id            String
+  sem_id            String
+  title             String
+  description       String
+  due_date          DateTime
+  max_marks         Int
+  attachment_r2_key String?  // faculty's file attached to assignment (e.g. problem statement PDF)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  faculty     Faculty      @relation(fields: [faculty_id], references: [faculty_id])
+  subject     Subject      @relation(fields: [sub_id], references: [sub_id])
+  semester    Semester     @relation(fields: [sem_id], references: [sem_id])
+  submissions Submission[]
+
+  @@index([sub_id, sem_id])
+  @@index([faculty_id])
+  @@map("assignments")
+}
+
+model Submission {
+  submission_id String           @id @default(uuid())
+  assign_id     String
+  student_id    String
+  content       String?          // optional text answer
+  r2_keys       String[]         // uploaded file keys in R2
+  status        SubmissionStatus @default(PENDING)
+  marks         Float?
+  feedback      String?
+  graded_by     String?          // faculty user_id who graded
+  submitted_at  DateTime?
+  graded_at     DateTime?
+  created_at    DateTime         @default(now())
+  updated_at    DateTime         @updatedAt
+
+  assignment Assignment @relation(fields: [assign_id], references: [assign_id])
+  student    Student    @relation(fields: [student_id], references: [student_id])
+
+  @@unique([assign_id, student_id])
+  @@index([assign_id])
+  @@index([student_id])
+  @@map("submissions")
+}
+
+model Resource {
+  res_id         String   @id @default(uuid())
+  sub_id         String
+  sem_id         String
+  uploaded_by_id String
+  title          String
+  description    String?
+  r2_key         String   @unique
+  mime_type      String   // actual MIME type of whatever file was uploaded
+  file_size      Int      // in bytes
+  is_topper_note Boolean  @default(false)
+  download_count Int      @default(0)
+  thumbnail_key  String?  // R2 key for image thumbnail (images only)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  subject  Subject  @relation(fields: [sub_id], references: [sub_id])
+  semester Semester @relation(fields: [sem_id], references: [sem_id])
+
+  @@index([sub_id, sem_id])
+  @@index([uploaded_by_id])
+  @@map("resources")
+}
+
+model Post {
+  post_id    String   @id @default(uuid())
+  author_id  String
+  sub_id     String
+  sem_id     String
+  parent_id  String?  // null = root post, non-null = reply to a post
+  type       PostType @default(DISCUSSION)
+  title      String?  // only on root posts, null for replies
+  content    String
+  tags       String[]
+  upvotes    Int      @default(0)
+  is_pinned  Boolean  @default(false)
+  is_locked  Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  subject   Subject      @relation(fields: [sub_id], references: [sub_id])
+  bookmarks PostBookmark[]
+  upvoted   PostUpvote[]
+
+  @@index([sub_id, sem_id])
+  @@index([author_id])
+  @@index([parent_id])
+  @@index([created_at])
+  @@map("posts")
+}
+
+model PostUpvote {
+  user_id String
+  post_id String
+
+  post Post @relation(fields: [post_id], references: [post_id])
+
+  @@id([user_id, post_id])
+  @@map("post_upvotes")
+}
+
+model PostBookmark {
+  user_id String
+  post_id String
+
+  post Post @relation(fields: [post_id], references: [post_id])
+
+  @@id([user_id, post_id])
+  @@map("post_bookmarks")
+}
+
+// ============================================================
+// PHASE 2 — WHATSAPP (CHAT)
+// ============================================================
+
+model Conversation {
+  conv_id     String           @id @default(uuid())
+  type        ConversationType @default(DIRECT)
+  name        String?          // group name (null for DIRECT)
+  avatar_key  String?          // R2 key for group avatar
+  created_by  String
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @updatedAt
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([created_by])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  conv_id   String
+  user_id   String
+  is_admin  Boolean  @default(false)
+  joined_at DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conv_id], references: [conv_id])
+
+  @@id([conv_id, user_id])
+  @@index([user_id])
+  @@map("conversation_members")
+}
+
+model Message {
+  msg_id      String      @id @default(uuid())
+  conv_id     String
+  sender_id   String
+  content     String
+  type        MessageType @default(TEXT)
+  r2_key      String?     // R2 key for IMAGE / FILE messages
+  is_deleted  Boolean     @default(false)
+  edited_at   DateTime?
+  created_at  DateTime    @default(now())
+
+  conversation  Conversation         @relation(fields: [conv_id], references: [conv_id])
+  read_receipts MessageReadReceipt[]
+
+  @@index([conv_id])
+  @@index([sender_id])
+  @@index([created_at])
+  @@map("messages")
+}
+
+model MessageReadReceipt {
+  msg_id  String
+  user_id String
+  read_at DateTime @default(now())
+
+  message Message @relation(fields: [msg_id], references: [msg_id])
+
+  @@id([msg_id, user_id])
+  @@map("message_read_receipts")
+}
+
+// ============================================================
+// PHASE 3 — DISCORD / SOCIAL (NOTIFICATIONS + GAMIFICATION)
+// ============================================================
+
+model Notification {
+  notif_id   String           @id @default(uuid())
+  user_id    String
+  type       NotificationType
+  data       Json             // flexible payload (ref_id, actor, message, etc.)
+  is_read    Boolean          @default(false)
+  created_at DateTime         @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, is_read])
+  @@index([created_at])
+  @@map("notifications")
+}
+
+model XpEvent {
+  xp_id      String   @id @default(uuid())
+  user_id    String
+  points     Int
+  reason     String
+  ref_id     String?  // optional reference (post_id, resource_id, etc.)
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id])
+  @@map("xp_events")
+}
+
+model Badge {
+  badge_id   String    @id @default(uuid())
+  user_id    String
+  type       BadgeType
+  awarded_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [user_id])
+
+  @@unique([user_id, type]) // one badge per type per user
+  @@index([user_id])
+  @@map("badges")
+}
+
+// ============================================================
+// PHASE 4 — GITHUB PROJECTS (MARKETPLACE)
+// ============================================================
+
+model Project {
+  project_id  String        @id @default(uuid())
+  leader_id   String
+  title       String
+  description String
+  status      ProjectStatus @default(OPEN)
+  open_roles  String[]      // e.g. ["Frontend", "ML Engineer"]
+  skills_req  String[]      // e.g. ["React", "Python"]
+  repo_url    String?
+  demo_url    String?
+  created_at  DateTime      @default(now())
+  updated_at  DateTime      @updatedAt
+
+  leader       User                 @relation(fields: [leader_id], references: [user_id])
+  members      ProjectMember[]
+  applications ProjectApplication[]
+
+  @@index([leader_id])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  project_id String
+  user_id    String
+  role       String   @default("MEMBER")
+  joined_at  DateTime @default(now())
+
+  project Project @relation(fields: [project_id], references: [project_id])
+
+  @@id([project_id, user_id])
+  @@map("project_members")
+}
+
+model ProjectApplication {
+  app_id     String            @id @default(uuid())
+  project_id String
+  user_id    String
+  role       String            // which open role they're applying for
+  message    String
+  status     ApplicationStatus @default(PENDING)
+  applied_at DateTime          @default(now())
+  updated_at DateTime          @updatedAt
+
+  project Project @relation(fields: [project_id], references: [project_id])
+
+  @@unique([project_id, user_id]) // one application per project per user
+  @@index([project_id])
+  @@index([user_id])
+  @@map("project_applications")
+}
