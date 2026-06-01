@@ -114,23 +114,77 @@ model Resource {
 
 // --- Chat ---
 model Conversation {
-  id        String           @id @default(cuid())
-  type      ConversationType @default(DIRECT)
-  name      String?
-  createdAt DateTime         @default(now())
+  conv_id               String           @id @default(uuid())
+  type                  ConversationType @default(DIRECT)
+  name                  String?
+  avatar_key            String?
+  created_by            String
+  allow_member_messages Boolean          @default(true)
+  allow_member_media    Boolean          @default(true)
+  allow_member_forms    Boolean          @default(true)
+  createdAt             DateTime         @default(now())
 }
 enum ConversationType { DIRECT GROUP }
-model ConversationMember { conversationId String; userId String; @@id([conversationId, userId]); @@index([userId]) }
+model ConversationMember { conv_id String; user_id String; @@id([conv_id, user_id]); @@index([user_id]) }
 model Message {
-  id             String   @id @default(cuid())
+  id             String      @id @default(uuid())
   content        String
-  senderId       String
-  conversationId String
+  sender_id      String
+  conv_id        String
   readBy         String[]
-  createdAt      DateTime @default(now())
-  @@index([conversationId])
-  @@index([senderId])
+  form_id        String?
+  createdAt      DateTime    @default(now())
+  @@index([conv_id])
+  @@index([sender_id])
   @@index([createdAt])
+}
+
+// --- Forms ---
+model Form {
+  form_id              String   @id @default(uuid())
+  title                String
+  description          String?
+  created_by           String
+  conv_id              String?
+  is_active            Boolean  @default(true)
+  allow_edit_responses Boolean  @default(false)
+  response_count       Int      @default(0)
+  createdAt            DateTime @default(now())
+  @@index([created_by])
+  @@index([conv_id])
+}
+
+model FormQuestion {
+  question_id String   @id @default(uuid())
+  form_id     String
+  question    String
+  type        String   // FormQuestionType
+  is_required Boolean  @default(false)
+  position    Int
+  options     String[]
+  createdAt   DateTime @default(now())
+  @@index([form_id])
+}
+
+model FormResponse {
+  response_id   String   @id @default(uuid())
+  form_id       String
+  respondent_id String
+  submitted_at  DateTime @default(now())
+  @@index([form_id])
+  @@index([respondent_id])
+}
+
+model FormAnswer {
+  answer_id    String   @id @default(uuid())
+  response_id  String
+  question_id  String
+  answer_text  String?
+  answer_array String[]
+  file_r2_key  String?
+  createdAt    DateTime @default(now())
+  @@index([response_id])
+  @@index([question_id])
 }
 
 // --- Notifications ---
@@ -320,20 +374,24 @@ Multer: `memoryStorage()`, max 50MB, types: pdf, doc, docx, ppt, pptx, zip, jpg,
 
 **Goal:** Real-time messaging, presence, notifications, badges, XP.
 
-### 3.1 — Real-Time Chat
+### 3.1 — Real-Time Chat & Forms
 
-**REST (history only):**
+**REST (history and forms):**
 ```
 GET  /api/v1/chat/conversations
 GET  /api/v1/chat/conversations/:id
 POST /api/v1/chat/conversations
 POST /api/v1/chat/groups
 POST /api/v1/chat/groups/:id/members
+POST /api/v1/chat/forms                      → create a new form
+GET  /api/v1/chat/forms/:id                  → get form details
+POST /api/v1/chat/forms/:id/responses        → submit response
+GET  /api/v1/chat/forms/:id/responses        → get form submissions (creator only)
 ```
 
 **Socket.io events:**
 ```
-Client → chat:message  { conversationId, content }
+Client → chat:message  { conversationId, content, isForm?, formId? }
 Server → chat:message  to all conversation members
 Client → chat:typing   { conversationId }
 Server → chat:typing   to others in conversation
@@ -342,7 +400,9 @@ Server → chat:read     to sender
 ```
 
 **`src/services/chat.service.ts`:**
-- `sendMessage`: persist Message → emit → queue notification for OFFLINE members
+- `sendMessage`: persist Message (handle form attachments) → emit → queue notification for OFFLINE members
+- `createForm`: persist Form → return form ID to attach to message
+- `submitFormResponse`: persist FormResponse → notify creator
 
 ### 3.2 — Presence System
 
