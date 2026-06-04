@@ -59,7 +59,7 @@ export default function HeroCard() {
         {/* Subtle gradient overlay */}
         <div className="absolute top-0 w-80 h-80 bg-gradient-to-bl from-primary/[0.05] to-transparent rounded-full -translate-y-24 translate-x-24" />
         {/* DES Watermark */}
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[260px] h-[260px] opacity-[0.06] select-none pointer-events-none">
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[200px] h-[200px] opacity-[0.06] select-none pointer-events-none hidden min-[500px]:block">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logoFav.png"
@@ -69,7 +69,7 @@ export default function HeroCard() {
         </div>
       </div>
 
-      <div className="relative z-10 p-8 pb-10">
+      <div className="relative z-10 p-6 pb-7">
         <motion.div variants={itemVariants}>
           <h1 className="text-3xl font-bold text-text-primary tracking-tight">
             {greeting},{" "}
@@ -78,7 +78,7 @@ export default function HeroCard() {
             </span>{" "}
             👋
           </h1>
-          <p className="mt-2 text-text-secondary text-[15px] font-medium">
+          <p className="mt-1 text-text-secondary text-[15px] font-medium">
             Computer Science Engineering
           </p>
           <p className="text-text-secondary/60 text-sm">Semester 6</p>
@@ -86,27 +86,27 @@ export default function HeroCard() {
 
         <motion.div
           variants={containerVariants}
-          className="flex flex-wrap gap-4 mt-8 mb-6"
+          className="flex flex-wrap gap-4 mt-10 mb-1"
         >
           {stats.map((stat) => (
             <motion.div
               key={stat.label}
               variants={itemVariants}
               whileHover={{ scale: 1.03 }}
-              className="flex items-center gap-3 px-5 py-3 rounded-2xl border border-border/60 bg-white/80 backdrop-blur-sm"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-border/60 bg-white/80 backdrop-blur-sm"
               style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div
-                className="flex items-center justify-center w-10 h-10 rounded-xl"
+                className="flex items-center justify-center w-9 h-9 rounded-xl"
                 style={{ backgroundColor: stat.bg }}
               >
-                <stat.icon size={20} style={{ color: stat.color }} strokeWidth={2} />
+                <stat.icon size={18} style={{ color: stat.color }} strokeWidth={2} />
               </div>
               <div>
-                <p className="text-xl font-bold text-text-primary leading-none">
+                <p className="text-lg font-bold text-text-primary leading-none">
                   {stat.value}
                 </p>
-                <p className="text-xs text-text-secondary mt-0.5">{stat.label}</p>
+                <p className="text-[11px] text-text-secondary mt-0.5">{stat.label}</p>
               </div>
             </motion.div>
           ))}

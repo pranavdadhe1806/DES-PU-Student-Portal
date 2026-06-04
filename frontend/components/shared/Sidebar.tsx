@@ -79,28 +79,25 @@ export default function Sidebar() {
           damping: 30,
         }}
         className={`
-          ${isMobile
-            ? `fixed top-0 left-0 z-50 h-full transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
-            : "sticky top-0 h-screen shrink-0"
-          }
-          bg-white border-r border-border flex flex-col relative
+          fixed top-0 left-0 z-50 h-full bg-white border-r border-border flex flex-col
+          lg:sticky lg:h-screen lg:shrink-0 lg:z-auto
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
         {/* Collapse button */}
-        {!isMobile && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 z-50 w-6 h-6 rounded-full bg-white border border-border/80 flex items-center justify-center text-text-secondary hover:text-primary shadow-sm hover:shadow-md transition-all cursor-pointer"
-          >
-            {sidebarCollapsed ? (
-              <ChevronRight size={13} strokeWidth={2.5} />
-            ) : (
-              <ChevronLeft size={13} strokeWidth={2.5} />
-            )}
-          </motion.button>
-        )}
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 z-50 w-6 h-6 rounded-full bg-white border border-border/80 hidden lg:flex items-center justify-center text-text-secondary hover:text-primary shadow-sm hover:shadow-md transition-all cursor-pointer"
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight size={13} strokeWidth={2.5} />
+          ) : (
+            <ChevronLeft size={13} strokeWidth={2.5} />
+          )}
+        </motion.button>
 
         {/* Logo section */}
         <div className="flex items-center justify-between h-[72px] px-5 border-b border-border/50 overflow-hidden">
@@ -112,14 +109,12 @@ export default function Sidebar() {
               sidebarCollapsed ? "w-10 object-cover object-left rounded-xl bg-primary-light p-1" : "w-auto"
             }`}
           />
-          {isMobile && (
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-background transition-colors"
-            >
-              <X size={18} className="text-text-secondary" />
-            </button>
-          )}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-1.5 rounded-lg hover:bg-background transition-colors lg:hidden"
+          >
+            <X size={18} className="text-text-secondary" />
+          </button>
         </div>
 
         {/* Navigation */}
