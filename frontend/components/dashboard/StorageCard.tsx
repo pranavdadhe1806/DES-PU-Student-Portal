@@ -2,12 +2,29 @@
 
 import { motion } from "framer-motion";
 import { HardDrive, ArrowRight } from "lucide-react";
+import { useUIStore } from "@/store/ui.store";
 
 const STORAGE_USED = 8.5;
 const STORAGE_TOTAL = 15;
 const STORAGE_PERCENT = (STORAGE_USED / STORAGE_TOTAL) * 100;
 
 export default function StorageCard() {
+  const { sidebarCollapsed } = useUIStore();
+
+  if (sidebarCollapsed) {
+    return (
+      <div className="p-4 border-t border-border/50 flex flex-col items-center justify-center">
+        <button 
+          title={`Storage: ${STORAGE_USED} GB / ${STORAGE_TOTAL} GB (${Math.round(STORAGE_PERCENT)}%)`}
+          className="relative p-2.5 rounded-xl hover:bg-background transition-all duration-200 group flex items-center justify-center text-text-secondary hover:text-primary"
+        >
+          <HardDrive size={18} strokeWidth={1.8} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-primary" />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 border-t border-border/50">
       <div className="flex items-center gap-2 mb-2">

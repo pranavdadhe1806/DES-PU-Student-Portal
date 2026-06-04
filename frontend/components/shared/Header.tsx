@@ -20,17 +20,20 @@ export default function Header() {
       transition={{ duration: 0.4 }}
       className="sticky top-0 z-30 h-[72px] bg-white/80 backdrop-blur-xl border-b border-border/50"
     >
-      <div className="flex items-center justify-between h-full px-6 gap-4">
-        {/* Left: Menu + Search */}
-        <div className="flex items-center gap-4 flex-1">
+      <div className="relative flex items-center justify-between h-full px-6 gap-4">
+        {/* Left: Menu Button */}
+        <div className="flex items-center gap-4 z-10">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-xl hover:bg-background transition-colors lg:hidden"
           >
             <Menu size={20} className="text-text-secondary" />
           </button>
+        </div>
 
-          <div className="relative flex-1 max-w-xl">
+        {/* Center: Search Bar (Desktop) */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[45%] max-w-3xl min-w-[320px] px-6 pointer-events-none hidden md:block z-20">
+          <div className="relative w-full pointer-events-auto">
             <Search
               size={16}
               className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/50"
@@ -43,6 +46,21 @@ export default function Header() {
             <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-text-secondary/50 bg-white border border-border/50 rounded-md px-1.5 py-0.5">
               Ctrl + K
             </kbd>
+          </div>
+        </div>
+
+        {/* Search Bar (Mobile/Tablet) */}
+        <div className="flex-1 md:hidden max-w-md">
+          <div className="relative w-full">
+            <Search
+              size={16}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary/50"
+            />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full h-10 pl-11 pr-10 rounded-xl bg-background border border-border/50 text-sm text-text-primary placeholder:text-text-secondary/50 focus:outline-none focus:border-primary/30 focus:ring-2 focus:ring-primary/10 transition-all"
+            />
           </div>
         </div>
 

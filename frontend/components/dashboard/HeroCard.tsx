@@ -49,43 +49,27 @@ export default function HeroCard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="relative col-span-12 lg:col-span-8 overflow-hidden rounded-[24px] bg-white border border-border shadow-sm"
+      className="relative col-span-12 lg:col-span-8 overflow-hidden rounded-[24px] border border-border shadow-sm"
+      style={{
+        background: "linear-gradient(135deg, #FFF8F2 0%, #FFFFFF 40%, #FFF4EB 100%)"
+      }}
     >
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Subtle gradient overlay */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-bl from-primary/[0.05] to-transparent rounded-full -translate-y-24 translate-x-24" />
+        <div className="absolute top-0 w-80 h-80 bg-gradient-to-bl from-primary/[0.05] to-transparent rounded-full -translate-y-24 translate-x-24" />
         {/* DES Watermark */}
-        <div className="absolute top-4 right-6 opacity-[0.06] select-none">
-          <svg width="220" height="220" viewBox="0 0 220 220" fill="none">
-            <text
-              x="110"
-              y="85"
-              textAnchor="middle"
-              fontSize="56"
-              fontWeight="900"
-              fill="#E86E0A"
-              fontFamily="system-ui"
-            >
-              DES
-            </text>
-            <text
-              x="110"
-              y="130"
-              textAnchor="middle"
-              fontSize="14"
-              fontWeight="700"
-              fill="#E86E0A"
-              fontFamily="system-ui"
-              letterSpacing="3"
-            >
-              PUNE UNIVERSITY
-            </text>
-          </svg>
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[260px] h-[260px] opacity-[0.06] select-none pointer-events-none">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logoFav.png"
+            alt="DES Logo Watermark"
+            className="w-full h-full object-contain"
+          />
         </div>
       </div>
 
-      <div className="relative z-10 p-8 pb-0">
+      <div className="relative z-10 p-8 pb-10">
         <motion.div variants={itemVariants}>
           <h1 className="text-3xl font-bold text-text-primary tracking-tight">
             {greeting},{" "}
@@ -130,25 +114,23 @@ export default function HeroCard() {
       </div>
 
       {/* Orange wave at bottom */}
-      <div className="relative h-10">
-        <svg
-          viewBox="0 0 1200 40"
-          preserveAspectRatio="none"
-          className="absolute bottom-0 left-0 w-full h-10"
-        >
-          <defs>
-            <linearGradient id="heroWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#E86E0A" />
-              <stop offset="50%" stopColor="#F59E0B" />
-              <stop offset="100%" stopColor="#E86E0A" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M0,15 Q150,0 300,15 T600,15 T900,15 T1200,15 L1200,40 L0,40 Z"
-            fill="url(#heroWaveGrad)"
-          />
-        </svg>
-      </div>
+      <svg
+        viewBox="0 0 1200 40"
+        preserveAspectRatio="none"
+        className="absolute bottom-0 left-0 w-full h-10 block z-20 pointer-events-none"
+      >
+        <defs>
+          <linearGradient id="heroWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#E86E0A" />
+            <stop offset="50%" stopColor="#F59E0B" />
+            <stop offset="100%" stopColor="#E86E0A" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M0,15 Q150,0 300,15 T600,15 T900,15 T1200,15 L1200,40 L0,40 Z"
+          fill="url(#heroWaveGrad)"
+        />
+      </svg>
     </motion.div>
   );
 }

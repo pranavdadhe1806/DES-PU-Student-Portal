@@ -19,6 +19,8 @@ import {
   HelpCircle,
   Menu,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 const navItems = [
@@ -40,7 +42,7 @@ const bottomItems = [
 ];
 
 export default function Sidebar() {
-  const { sidebarOpen, setSidebarOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen, sidebarCollapsed, setSidebarCollapsed } = useUIStore();
   const [activeItem, setActiveItem] = useState("Dashboard");
   const [isMobile, setIsMobile] = useState(false);
 
@@ -67,35 +69,49 @@ export default function Sidebar() {
       </AnimatePresence>
 
       {/* Sidebar */}
-      <aside
+      <motion.aside
+        animate={{
+          width: isMobile ? 280 : (sidebarCollapsed ? 80 : 280)
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 300,
+          damping: 30,
+        }}
         className={`
           ${isMobile
             ? `fixed top-0 left-0 z-50 h-full transition-transform duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`
             : "sticky top-0 h-screen shrink-0"
           }
-          w-[280px] bg-white border-r border-border flex flex-col
+          bg-white border-r border-border flex flex-col relative
         `}
       >
+        {/* Collapse button */}
+        {!isMobile && (
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2 z-50 w-6 h-6 rounded-full bg-white border border-border/80 flex items-center justify-center text-text-secondary hover:text-primary shadow-sm hover:shadow-md transition-all cursor-pointer"
+          >
+            {sidebarCollapsed ? (
+              <ChevronRight size={13} strokeWidth={2.5} />
+            ) : (
+              <ChevronLeft size={13} strokeWidth={2.5} />
+            )}
+          </motion.button>
+        )}
+
         {/* Logo section */}
-        <div className="flex items-center justify-between p-5 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary-light overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo.png"
-                alt="DES PU Logo"
-                className="w-8 h-8 object-contain"
-              />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-text-primary leading-tight tracking-tight">
-                DES Pune
-              </h2>
-              <p className="text-[10px] text-primary font-semibold uppercase tracking-wider">
-                University
-              </p>
-            </div>
-          </div>
+        <div className="flex items-center justify-between h-[72px] px-5 border-b border-border/50 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.png"
+            alt="DES PU Logo"
+            className={`h-10 object-contain transition-all duration-300 ${
+              sidebarCollapsed ? "w-10 object-cover object-left rounded-xl bg-primary-light p-1" : "w-auto"
+            }`}
+          />
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(false)}
@@ -107,7 +123,9 @@ export default function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-3">
+        <nav className={`flex-1 py-4 px-3 ${
+          sidebarCollapsed ? "overflow-visible" : "overflow-y-auto overflow-x-hidden"
+        }`}>
           <div className="space-y-0.5">
             {navItems.map((item) => {
               const isActive = activeItem === item.label;
@@ -116,8 +134,9 @@ export default function Sidebar() {
                   key={item.label}
                   onClick={() => setActiveItem(item.label)}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium
+                    w-full flex items-center rounded-xl text-[13px] font-medium
                     transition-all duration-200 relative group
+                    ${sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"}
                     ${isActive
                       ? "bg-primary-light text-primary"
                       : "text-text-secondary hover:bg-background hover:text-text-primary"
@@ -138,7 +157,24 @@ export default function Sidebar() {
                     }`}
                     strokeWidth={isActive ? 2.2 : 1.8}
                   />
-                  <span className="relative z-10">{item.label}</span>
+                  <AnimatePresence mode="wait">
+                    {!sidebarCollapsed && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="relative z-10 whitespace-nowrap overflow-hidden"
+                      >
+                        {item.label}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  {sidebarCollapsed && (
+                    <span className="absolute left-full ml-4 px-2.5 py-1.5 rounded-lg bg-text-primary text-white text-[11px] font-medium opacity-0 pointer-events-none translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto transition-all duration-200 whitespace-nowrap shadow-md z-50">
+                      {item.label}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -151,10 +187,30 @@ export default function Sidebar() {
               <button
                 key={item.label}
                 onClick={() => setActiveItem(item.label)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-all duration-200"
+                className={`
+                  w-full flex items-center rounded-xl text-[13px] font-medium text-text-secondary hover:bg-background hover:text-text-primary transition-all duration-200 relative group
+                  ${sidebarCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2.5"}
+                `}
               >
                 <item.icon size={18} strokeWidth={1.8} />
-                <span>{item.label}</span>
+                <AnimatePresence mode="wait">
+                  {!sidebarCollapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "auto" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="whitespace-nowrap overflow-hidden"
+                    >
+                      {item.label}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+                {sidebarCollapsed && (
+                  <span className="absolute left-full ml-4 px-2.5 py-1.5 rounded-lg bg-text-primary text-white text-[11px] font-medium opacity-0 pointer-events-none translate-x-[-10px] group-hover:opacity-100 group-hover:translate-x-0 group-hover:pointer-events-auto transition-all duration-200 whitespace-nowrap shadow-md z-50">
+                    {item.label}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -162,7 +218,7 @@ export default function Sidebar() {
 
         {/* Storage widget */}
         <StorageCard />
-      </aside>
+      </motion.aside>
     </>
   );
 }
